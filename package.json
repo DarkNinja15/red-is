@@ -12,5 +12,8 @@
   "description": "",
   "devDependencies": {
     "@types/node": "^22.5.5"
+  },
+  "dependencies": {
+    "worker": "^0.4.0"
   }
 }
