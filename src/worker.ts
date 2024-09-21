@@ -1,12 +1,21 @@
 import { parentPort } from "worker_threads";
 
-parentPort?.on("message", (data) => {
-  console.log("Worker received data: ", JSON.stringify(data));
+parentPort?.on("message", (data: string) => {
+  const inputData = data.toString().trim();
 
-  for(let i=0;i<10000000000;i++){}
+  console.log("Worker received data: ", inputData);
 
-  const response = "+PONG\r\n";
+  if (inputData.toUpperCase().startsWith("ECHO")) {
+    const message = inputData
+      .split(' ')
+      .filter((word) => word.toUpperCase() !== "ECHO")
+      .join(' ');
 
-  parentPort?.postMessage(response);
+    console.log("Processed message: ", message);
+    
+    parentPort?.postMessage(`${message}\r\n`);
+  } else {
+    parentPort?.postMessage("INVALID COMMAND\r\n");
+  }
 });
 
