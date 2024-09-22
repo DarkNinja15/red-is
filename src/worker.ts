@@ -1,21 +1,30 @@
 import { parentPort } from "worker_threads";
+import { ReddisParser } from "./redis-parser";
+
+const values = new Map();
 
 parentPort?.on("message", (data: string) => {
-  const inputData = data.toString().trim();
+    const connectionParser = new ReddisParser(data.toString().trim());
 
-  console.log("Worker received data: ", inputData);
+    console.log(connectionParser.getCommand()+" "+connectionParser.getArgs());
 
-  if (inputData.toUpperCase().startsWith("ECHO")) {
-    const message = inputData
-      .split(' ')
-      .filter((word) => word.toUpperCase() !== "ECHO")
-      .join(' ');
-
-    console.log("Processed message: ", message);
-    
-    parentPort?.postMessage(`${message}\r\n`);
-  } else {
-    parentPort?.postMessage("INVALID COMMAND\r\n");
-  }
+    switch(connectionParser.getCommand()){
+      case "ping":
+        parentPort?.postMessage("PONG\r\n");
+        break;
+      case "echo":
+        parentPort?.postMessage(connectionParser.getArgs()+"\r\n");
+        break;
+      case "set":
+        values.set(connectionParser.getArgs().split(' ')[0],connectionParser.getArgs().split(' ')[1]);
+        parentPort?.postMessage("OK\r\n");
+        break;
+      case "get":
+        const value=values.get(connectionParser.getArgs().split(' ')[0]);
+        parentPort?.postMessage(`${value}\r\n`);
+        break;
+      default:
+        parentPort?.postMessage(`-ERR unknown command ${connectionParser.getCommand()}\r\n`);
+    }
 });
 
